@@ -146,7 +146,7 @@ For the source .Rmd document, please [click here][src].
 
 [rmd]: http://rmarkdown.rstudio.com/
 [knitr]: http://knitr.com/
-[src]: https://github.com/scumdogsteev/regression_models_PA/regression_models_PA.Rmd
+[src]: https://github.com/scumdogsteev/regression_models_PA/blob/master/regression_models_PA.Rmd
 
 \newpage
 
