@@ -1,0 +1,182 @@
+---
+title: "The Effect of Transmission on MPG"
+author: "Steve Myles"
+date: "21 November 2015"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: no
+---
+
+# Executive Summary
+
+This report is an investigation of the relationship between transmission (manual 
+vs. automatic) and miles per gallon (MPG) for thirty-two automobiles featured in 
+*Motor Trend* in 1974.  Specifically, the following two questions are addressed:
+
+1. Is an automatic or manual transmission better for MPG?
+2. Quantify the MPG difference between automatic and manual transmissions.
+
+From the data, it is apparent that manual transmissions are better for MPG 
+(on average, manual transmissions have higher MPG than automatic transmissions). 
+The difference between them, removing confounding variables weight and 
+horsepower, is approx. 2 MPG (average automatic transmission MPG = 34.00 and 
+average manual transmission MPG = 36.09).
+
+# Analysis
+
+First, a brief exploratory analysis was performed.  This includes the generation 
+of a box and whisker plot to compare the distributions of MPG for each type of 
+transmission (see Appendix, Fig. 1).
+```{r load and explore, echo = FALSE}
+## load the data and provide a summary
+data(mtcars)
+
+## "am" is the field that contains transmission data.  0 = automatic 
+## transmission and 1 = manual transmission.  convert binary variables am and 
+## vs, as well as factor variables gear, carb, and cyl to factors
+mtcars2 <- mtcars
+mtcars2$am <- as.factor(mtcars$am)
+mtcars2$vs <- as.factor(mtcars$vs)
+mtcars2$gear <- as.factor(mtcars$gear)
+mtcars2$carb <- as.factor(mtcars$carb)
+mtcars2$cyl <- as.factor(mtcars$cyl)
+```
+
+From this plot, it is clear that on average and in the majority of cases (due to
+the small overlap of the ranges) manual transmissions result in higher (better) 
+MPG.  Additionally, the spread of MPG for manual transmissions is larger than 
+that for automatic transmissions.
+
+The analysis was continued with a simple linear model, comparing MPG to 
+transmission: 
+
+```{r regression 1, echo = FALSE}
+## fit a linear model comparing mpg to transmission
+modelmpgam <- lm(mpg ~ am, data = mtcars)
+summary(modelmpgam)$coef
+modelmpgamr2 <- summary(modelmpgam)$adj.r.squared
+```
+
+"Estimate" in the above table is the mean MPG for each factor, either automatic
+(17.147, the intercept) or manual (24.39 = 17.147 + 7.245).  This confirms what 
+is shown in the plot:  manual transmissions do, on average, result in higher MPG
+(and are therefore better in this regard).  The note about the spread of values 
+is also confirmed as MPG for manual transmissions has a higher standard error.  
+This model's residuals plots can be seen in the Fig. 2 of the Appendix.
+
+However, it should be noted that some of the other variables in the data set may
+have a confounding effect.  This is evidenced by the model's relatively low 
+adjusted *R^2^* (`r modelmpgamr2`, indicating that only 33.8% of the variation 
+in MPG is explained by the variables in the model).  As such, it was necessary 
+to fit other linear models that remove the effects of other variables from 
+consideration in order to determine the true MPG difference between automatic 
+and manual transmissions.
+
+Per the following table which shows the correlations of `mpg` and the remaining 
+nine variables (all variables in the `mtcars` data set with the exception of 
+`am` and `mpg`), it is obvious that several other variables are related to MPG.
+
+```{r mpg correlation, echo = FALSE}
+## determine the correlation of mpg with each of the variables in the mtcars
+## dataset, excepting am
+mpgCor <- as.matrix(cor(mtcars[,1],mtcars[,c(2:8,10:11)]))
+mpgCor
+```
+
+For the purposes of this analysis, only those variables with very strong 
+(positive or negative) correlations were considered.  Very strong correlations
+are defined here as +/- 0.7 (definition from [here](http://study.com/academy/lesson/positive-correlation-in-psychology-examples-definition-quiz.html)).
+
+This leaves four variables, `cyl`, `disp`, `hp`, and `wt`.  The correlation of 
+these variables with each other was then checked to avoid having the final model
+include variables that are very strongly correlated with each other.
+
+```{r other correlations, echo = FALSE}
+## calculate the correlation matrix for all mtcars variables except mpg and am
+mtcarsCor <- as.matrix(cor(mtcars[,c(2:4,6)]))
+mtcarsCor
+```
+
+As can be seen in the above table, each of these variables has a very strong 
+correlation with the others (using the +/- 0.7 definition as described above), 
+with the  exception of horsepower (`hp`) and weight in thousands of pounds 
+(`wt`).  As such, only these two variables were considered for inclusion into 
+the linear model.
+
+```{r regression2, echo = FALSE}
+## fit additional linear models adding variables to isolate the transmission
+## effect on mpg
+modelmpgamwt <- lm(mpg ~ as.factor(am) + wt, data = mtcars)
+modelmpgamwtr2 <- summary(modelmpgamwt)$adj.r.squared
+modelmpgamwthp <- lm(mpg ~ as.factor(am) + wt + hp, data = mtcars)
+modelmpgamwthpr2 <- summary(modelmpgamwthp)$adj.r.squared
+modelmpgamwthpcoef <- summary(modelmpgamwthp)$coef
+```
+
+First, `wt` was added to the linear model resulting in an adjusted *R^2^* of 
+`r modelmpgamwtr2`. This is much improved over the original adjusted *R^2^* of 
+`r modelmpgamr2`.  `hp` was then added to the model, resulting in an adjusted
+*R^2^* of `r modelmpgamwthpr2` (indicating that 82.3% of the variation in MPG
+is explained by the variables in the model).  As this has the highest adjusted 
+*R^2^* of the models considered, this is the best representation of the effect 
+of transmission type on MPG.
+
+The model's coefficients are:
+
+```{r regression 2 coefficients, echo = FALSE}
+modelmpgamwthpcoef
+```
+
+"Estimate" in the above table is the effect of each variable on mean MPG, either
+automatic transmission (34.00, the intercept) or manual transmission (36.09 = 
+34.003 + 2.084).  This confirms the earlier assessment that manual transmissions
+on average result in higher MPG, though the difference between them is much less 
+pronounced when the confounding effects of weight and horsepower are removed.  
+Weight and horsepower both have negative effects on mean MPG, which makes 
+logical sense - more powerful (higher horsepower) and/or heavier (higher weight) 
+engines would require more fuel to operate and thus would have lower gas mileage 
+(MPG). This model's residuals plots can be seen in the Fig. 3 of the Appendix.
+
+# Note
+
+This report was written in [R Markdown][rmd] and converted to pdf via [knitr][knitr]. 
+For the source .Rmd document, please [click here][src].
+
+[rmd]: http://rmarkdown.rstudio.com/
+[knitr]: http://knitr.com/
+[src]: https://github.com/scumdogsteev/regression_models_PA/regression_models_PA.Rmd
+
+\newpage
+
+# Appendix
+
+**Fig. 1** 
+
+```{r boxplot, echo = FALSE}
+## create a box and whisker plot of the relationship between these two variables
+boxplot(mpg ~ am, data = mtcars, ylab = "MPG", xaxt = "n", 
+        xlab = "Transmission", main = "Transmission and MPG Distributions for 
+        Motor Trend 1974 Data")
+axis(1, at=1:2, labels = c("Automatic", "Manual"))
+```
+\newpage
+
+**Fig. 2** 
+
+```{r modelmpgam plots, echo = FALSE}
+## display residuals plots for modelmpgam
+par(mfrow = c(2, 2))
+plot(modelmpgam, main = "Transmission vs. MPG")
+```
+\newpage
+
+**Fig. 3** 
+
+```{r modelmpgamwthp plot, echo = FALSE, warning = FALSE, message = FALSE}
+## display residuals plots for modelmpgamwthp
+par(mfrow = c(2, 2))
+plot(modelmpgamwthp, main = "Transmission vs. MPG 
+with Confounding Variables Removed")
+```
