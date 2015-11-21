@@ -5,8 +5,6 @@ date: "21 November 2015"
 output:
   pdf_document:
     toc: no
-  html_document:
-    toc: no
 ---
 
 # Executive Summary
@@ -133,7 +131,7 @@ modelmpgamwthpcoef
 automatic transmission (34.00, the intercept) or manual transmission (36.09 = 
 34.003 + 2.084).  This confirms the earlier assessment that manual transmissions
 on average result in higher MPG, though the difference between them is much less 
-pronounced when the confounding effects of weight and horsepower are removed.  
+pronounced when the confounding effects of weight and horsepower are removed. 
 Weight and horsepower both have negative effects on mean MPG, which makes 
 logical sense - more powerful (higher horsepower) and/or heavier (higher weight) 
 engines would require more fuel to operate and thus would have lower gas mileage 
